@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin</title>
+    <style>
+      body {
+        background-color: black;
+      }
+      h1 {
+        text-align: center;
+        color: white;
+      }
+      .requests {
+        width: auto;
+        height: 80vh;
+        background-color: rgb(35, 32, 32);
+        margin-left: auto;
+        margin-right: auto;
+        margin-top: 2rem;
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        align-items: center;
+        overflow-y: auto;
+        padding: 2rem;
+      }
+      img {
+        margin: 1rem;
+      }
+      .cen {
+        text-align: center;
+        color: white;
+        font-weight: bold;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+      .button {
+        display: inline-block;
+        padding: 10px 20px;
+        font-size: 16px;
+        font-weight: bold;
+        text-align: center;
+        text-decoration: none;
+        cursor: pointer;
+        border: 2px solid #3498db;
+        color: #3498db;
+        background-color: white;
+        border-radius: 5px;
+        transition: background-color 0.3s, color 0.3s;
+      }
+
+      .button:hover {
+        background-color: #3498db;
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Hello Admin!</h1>
+    <div class="requests"></div>
+  </body>
+  <script>
+    let fimages;
+
+    function update(data) {
+      fimages = data.map((el, pos) => el);
+
+      fimages.forEach((element) => {
+        addEl(element.image.data, element.name);
+      });
+    }
+    const images = fetch("/uploads")
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        return response.json(); // Assuming the response is JSON
+      })
+      .then((data) => {
+        // Handle the response data
+        update(data);
+      })
+      .catch((error) => {
+        // Handle any errors
+        console.error("There was a problem with your fetch operation:", error);
+      });
+
+    function addEl(string, username) {
+      let base64Image = string;
+
+      const div = document.createElement("div");
+
+      const img = new Image();
+      const p = document.createElement("p");
+
+      p.setAttribute("class", "button");
+
+      // Set the src attribute to a data URL representing the image
+      img.src = string;
+      img.height = 200;
+      const paragraphContent = document.createTextNode(username);
+      p.appendChild(paragraphContent);
+      div.appendChild(img);
+      div.appendChild(p);
+      div.setAttribute("class", "cen");
+
+      p.addEventListener("click", function (e) {
+        console.log(e.target.textContent);
+        handleDelete(e);
+      });
+      // Append the image to the DOM to display it
+      document.querySelector(".requests").appendChild(div);
+    }
+    function handleDelete(e) {
+      fetch("/delete", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          // Add any other headers as needed
+        },
+        body: JSON.stringify({ name: e.target.textContent }),
+      })
+        .then((response) => {
+          if (response.status === 200) {
+            // Assuming 'container' is the parent element
+            const container = document.querySelector(".requests");
+
+            // Remove all child elements of 'container'
+            while (container.firstChild) {
+              container.removeChild(container.firstChild);
+            }
+
+            fetch("/uploads")
+              .then((response) => {
+                if (!response.ok) {
+                  throw new Error("Network response was not ok");
+                }
+                return response.json(); // Assuming the response is JSON
+              })
+              .then((data) => {
+                // Handle the response data
+                update(data);
+              })
+              .catch((error) => {
+                // Handle any errors
+                console.error(
+                  "There was a problem with your fetch operation:",
+                  error
+                );
+              });
+          }
+          if (!response.ok) {
+            throw new Error("Network response was not ok");
+          }
+          return response.json();
+        })
+        .then((data) => {
+          console.log("Success:", data);
+          // Handle the response data
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          // Handle errors
+        });
+    }
+  </script>
+</html>
